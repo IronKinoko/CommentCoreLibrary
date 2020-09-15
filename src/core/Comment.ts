@@ -8,168 +8,179 @@
 /// <reference path='Core.d.ts' />
 /// <reference path='CommentUtils.ts' />
 class CoreComment implements IComment {
-  public static LINEAR:Function = function (t:number, b:number, c:number, d:number):number {
-    return t * c / d + b;
-  };
+  public static LINEAR: Function = function (
+    t: number,
+    b: number,
+    c: number,
+    d: number
+  ): number {
+    return (t * c) / d + b
+  }
 
-  public mode:number = 1;
-  public stime:number = 0;
-  public text:string = '';
-  public ttl:number = 4000;
-  public dur:number = 4000;
-  public cindex:number = -1;
+  public mode: number = 1
+  public stime: number = 0
+  public text: string = ''
+  public useHTML: boolean = false
+  public ttl: number = 4000
+  public dur: number = 4000
+  public cindex: number = -1
 
-  public motion:Array<Object> = [];
-  public movable:boolean = true;
+  public motion: Array<Object> = []
+  public movable: boolean = true
 
-  private _curMotion:number;
-  private _motionStart:Array<number>;
-  private _motionEnd:Array<number>;
-  private _alphaMotion:Object = null;
+  private _curMotion: number
+  private _motionStart: Array<number>
+  private _motionEnd: Array<number>
+  private _alphaMotion: Object = null
 
-  public _x:number;
-  public _y:number;
+  public _x: number
+  public _y: number
 
   /**
    * Absolute coordinates. Use absolute coordinates if true otherwise use percentages.
    * @type {boolean} use absolute coordinates or not (default true)
    */
-  public absolute:boolean = true;
+  public absolute: boolean = true
   /**
    * Alignment
    * @type {number} 0=tl, 2=bl, 1=tr, 3=br
    */
-  public align:number = 0;
+  public align: number = 0
   /**
    * Axis
    * @type {number} 0=dr, 1=dl, 2=ur, 3=ul
    */
-  public axis:number = 0;
+  public axis: number = 0
 
-  public _alpha:number = 1;
-  public _size:number = 25;
-  private _width:number;
-  private _height:number;
-  private _color:number = 0xffffff;
-  private _border:boolean = false;
-  private _shadow:boolean = true;
-  private _font:string = '';
-  private _transform:CommentUtils.Matrix3D = null;
-  private _className:string = '';
+  public _alpha: number = 1
+  public _size: number = 25
+  private _width: number
+  private _height: number
+  private _color: number = 0xffffff
+  private _border: boolean = false
+  private _shadow: boolean = true
+  private _font: string = ''
+  private _transform: CommentUtils.Matrix3D = null
+  private _className: string = ''
 
-  public parent:ICommentManager;
-  public dom:HTMLDivElement;
+  public parent: ICommentManager
+  public dom: HTMLDivElement
 
-  public className:String;
+  public className: String
 
-  constructor(parent:ICommentManager, init:Object = {}) {
+  constructor(parent: ICommentManager, init: Object = {}) {
     if (!parent) {
-      throw new Error('Comment not bound to comment manager.');
+      throw new Error('Comment not bound to comment manager.')
     } else {
-      this.parent = parent;
+      this.parent = parent
     }
     if (init.hasOwnProperty('stime')) {
-      this.stime = init['stime'];
+      this.stime = init['stime']
     }
     if (init.hasOwnProperty('mode')) {
-      this.mode = init['mode'];
+      this.mode = init['mode']
     } else {
-      this.mode = 1;
+      this.mode = 1
     }
     if (init.hasOwnProperty('dur')) {
-      this.dur = init['dur'];
-      this.ttl = this.dur;
+      this.dur = init['dur']
+      this.ttl = this.dur
     }
-    this.dur *= this.parent.options.global.scale;
-    this.ttl *= this.parent.options.global.scale;
+    this.dur *= this.parent.options.global.scale
+    this.ttl *= this.parent.options.global.scale
     if (init.hasOwnProperty('text')) {
-      this.text = init['text'];
+      this.text = init['text']
     }
+
+    if (init.hasOwnProperty('useHTML')) {
+      this.useHTML = init['useHTML']
+    }
+
     if (init.hasOwnProperty('motion')) {
-      this._motionStart = [];
-      this._motionEnd = [];
-      this.motion = init['motion'];
-      var head = 0;
+      this._motionStart = []
+      this._motionEnd = []
+      this.motion = init['motion']
+      var head = 0
       for (var i = 0; i < init['motion'].length; i++) {
-        this._motionStart.push(head);
-        var maxDur = 0;
+        this._motionStart.push(head)
+        var maxDur = 0
         for (var k in init['motion'][i]) {
-          var m = <IMotion> init['motion'][i][k];
-          maxDur = Math.max(m.dur + m.delay, maxDur);
+          var m = <IMotion>init['motion'][i][k]
+          maxDur = Math.max(m.dur + m.delay, maxDur)
           if (m.easing === null || m.easing === undefined) {
-            init['motion'][i][k]['easing'] = CoreComment.LINEAR;
+            init['motion'][i][k]['easing'] = CoreComment.LINEAR
           }
         }
-        head += maxDur;
-        this._motionEnd.push(head);
+        head += maxDur
+        this._motionEnd.push(head)
       }
-      this._curMotion = 0;
+      this._curMotion = 0
     }
     if (init.hasOwnProperty('color')) {
-      this._color = init['color'];
+      this._color = init['color']
     }
     if (init.hasOwnProperty('size')) {
-      this._size = init['size'];
+      this._size = init['size']
     }
     if (init.hasOwnProperty('border')) {
-      this._border = init['border'];
+      this._border = init['border']
     }
     if (init.hasOwnProperty('opacity')) {
-      this._alpha = init['opacity'];
+      this._alpha = init['opacity']
     }
     if (init.hasOwnProperty('alpha')) {
-      this._alphaMotion = init['alpha'];
+      this._alphaMotion = init['alpha']
     }
     if (init.hasOwnProperty('font')) {
-      this._font = init['font'];
+      this._font = init['font']
     }
     if (init.hasOwnProperty('x')) {
-      this._x = init['x'];
+      this._x = init['x']
     }
     if (init.hasOwnProperty('y')) {
-      this._y = init['y'];
+      this._y = init['y']
     }
     if (init.hasOwnProperty('shadow')) {
-      this._shadow = init['shadow'];
+      this._shadow = init['shadow']
     }
     if (init.hasOwnProperty('align')) {
-      this.align = init['align'];
+      this.align = init['align']
     }
     if (init.hasOwnProperty('axis')) {
-      this.axis = init['axis'];
+      this.axis = init['axis']
     }
     if (init.hasOwnProperty('transform')) {
-      this._transform = new CommentUtils.Matrix3D(init['transform']);
+      this._transform = new CommentUtils.Matrix3D(init['transform'])
     }
     if (init.hasOwnProperty('position')) {
       if (init['position'] === 'relative') {
-        this.absolute = false;
+        this.absolute = false
         if (this.mode < 7) {
-          console.warn('Using relative position for CSA comment.');
+          console.warn('Using relative position for CSA comment.')
         }
       }
     }
     if (init.hasOwnProperty('className')) {
-      this._className = init['className'];
+      this._className = init['className']
     }
   }
 
-  protected _toggleClass(className:string, toggle:boolean = false):void {
+  protected _toggleClass(className: string, toggle: boolean = false): void {
     if (!this.dom) {
-      return;
+      return
     }
     if (this.dom.classList) {
-      this.dom.classList.toggle(className, toggle);
+      this.dom.classList.toggle(className, toggle)
     } else {
       // Fallback to traditional method
-      var classList:string[] = this.dom.className.split(' ');
-      var index = classList.indexOf(className);
+      var classList: string[] = this.dom.className.split(' ')
+      var index = classList.indexOf(className)
       if (index >= 0 && !toggle) {
-        classList.splice(index, 1);
-        this.dom.className = classList.join(' ');
+        classList.splice(index, 1)
+        this.dom.className = classList.join(' ')
       } else if (index < 0 && toggle) {
         classList.push(className)
-        this.dom.className = classList.join(' ');
+        this.dom.className = classList.join(' ')
       }
     }
   }
@@ -178,227 +189,238 @@ class CoreComment implements IComment {
    * Initializes the DOM element (or canvas) backing the comment
    * This method takes the place of 'initCmt' in the old CCL
    */
-  public init(recycle:IComment = null):void {
+  public init(recycle: IComment = null): void {
     if (recycle !== null) {
-      this.dom = <HTMLDivElement> recycle.dom;
+      this.dom = <HTMLDivElement>recycle.dom
     } else {
-      this.dom = document.createElement('div');
+      this.dom = document.createElement('div')
     }
-    this.dom.className = this.parent.options.global.className;
-    if (this._className !== "") {
-      this.dom.className += " " + this._className;
+    this.dom.className = this.parent.options.global.className
+    if (this._className !== '') {
+      this.dom.className += ' ' + this._className
     }
-    this.dom.appendChild(document.createTextNode(this.text));
-    this.dom.textContent = this.text;
-    this.dom.innerText = this.text;
-    this.size = this._size;
+    if (this.useHTML) {
+      this.dom.innerHTML = this.text
+    } else {
+      this.dom.appendChild(document.createTextNode(this.text))
+      this.dom.textContent = this.text
+      this.dom.innerText = this.text
+    }
+    this.size = this._size
     if (this._color != 0xffffff) {
-      this.color = this._color;
+      this.color = this._color
     }
-    this.shadow = this._shadow;
+    this.shadow = this._shadow
     if (this._border) {
-      this.border = this._border;
+      this.border = this._border
     }
     if (this._font !== '') {
-      this.font = this._font;
+      this.font = this._font
     }
     if (this._x !== undefined) {
-      this.x = this._x;
+      this.x = this._x
     }
     if (this._y !== undefined) {
-      this.y = this._y;
+      this.y = this._y
     }
     if (this._alpha !== 1 || this.parent.options.global.opacity < 1) {
-      this.alpha = this._alpha;
+      this.alpha = this._alpha
     }
-    if (this._transform !== null && ! this._transform.isIdentity()) {
-      this.transform = this._transform.flatArray;
+    if (this._transform !== null && !this._transform.isIdentity()) {
+      this.transform = this._transform.flatArray
     }
     if (this.motion.length > 0) {
       // Force a position update before doing anything
-      this.animate();
+      this.animate()
     }
   }
 
-  get x():number {
+  get x(): number {
     if (this._x === null || this._x === undefined) {
       if (this.axis % 2 === 0) {
         if (this.align % 2 === 0) {
-          this._x = this.dom.offsetLeft;
+          this._x = this.dom.offsetLeft
         } else {
-          this._x = this.dom.offsetLeft + this.width;
+          this._x = this.dom.offsetLeft + this.width
         }
       } else {
         if (this.align % 2 === 0) {
-          this._x = this.parent.width - this.dom.offsetLeft;
+          this._x = this.parent.width - this.dom.offsetLeft
         } else {
-          this._x = this.parent.width - this.dom.offsetLeft - this.width;
+          this._x = this.parent.width - this.dom.offsetLeft - this.width
         }
       }
     }
     if (!this.absolute) {
-      return this._x / this.parent.width;
+      return this._x / this.parent.width
     }
-    return this._x;
+    return this._x
   }
 
-  get y():number {
+  get y(): number {
     if (this._y === null || this._y === undefined) {
       if (this.axis < 2) {
         if (this.align < 2) {
-          this._y = this.dom.offsetTop;
+          this._y = this.dom.offsetTop
         } else {
-          this._y = this.dom.offsetTop + this.height;
+          this._y = this.dom.offsetTop + this.height
         }
       } else {
         if (this.align < 2) {
-          this._y = this.parent.height - this.dom.offsetTop;
+          this._y = this.parent.height - this.dom.offsetTop
         } else {
-          this._y = this.parent.height - this.dom.offsetTop - this.height;
+          this._y = this.parent.height - this.dom.offsetTop - this.height
         }
       }
     }
     if (!this.absolute) {
-      return this._y / this.parent.height;
+      return this._y / this.parent.height
     }
-    return this._y;
+    return this._y
   }
 
-  get bottom():number {
-    var sameDirection = Math.floor(this.axis / 2) === Math.floor(this.align / 2);
-    return this.y + (sameDirection ? this.height : 0);
+  get bottom(): number {
+    var sameDirection = Math.floor(this.axis / 2) === Math.floor(this.align / 2)
+    return this.y + (sameDirection ? this.height : 0)
   }
 
-  get right():number {
-    var sameDirection = this.axis % 2 === this.align % 2;
-    return this.x + (sameDirection ? this.width : 0);
+  get right(): number {
+    var sameDirection = this.axis % 2 === this.align % 2
+    return this.x + (sameDirection ? this.width : 0)
   }
 
-  get width():number {
+  get width(): number {
     if (this._width === null || this._width === undefined) {
-      this._width = this.dom.offsetWidth;
+      this._width = this.dom.offsetWidth
     }
-    return this._width;
+    return this._width
   }
 
-  get height():number {
+  get height(): number {
     if (this._height === null || this._height === undefined) {
-      this._height = this.dom.offsetHeight;
+      this._height = this.dom.offsetHeight
     }
-    return this._height;
+    return this._height
   }
 
-  get size():number {
-    return this._size;
+  get size(): number {
+    return this._size
   }
 
-  get color():number {
-    return this._color;
+  get color(): number {
+    return this._color
   }
 
-  get alpha():number {
-    return this._alpha;
+  get alpha(): number {
+    return this._alpha
   }
 
-  get border():boolean {
-    return this._border;
+  get border(): boolean {
+    return this._border
   }
 
-  get shadow():boolean {
-    return this._shadow;
+  get shadow(): boolean {
+    return this._shadow
   }
 
-  get font():string {
-    return this._font;
+  get font(): string {
+    return this._font
   }
 
-  get transform():Array<number> {
-    return this._transform.flatArray;
+  get transform(): Array<number> {
+    return this._transform.flatArray
   }
 
-  set x(x:number) {
-    this._x = x;
+  set x(x: number) {
+    this._x = x
     if (!this.absolute) {
-      this._x *= this.parent.width;
+      this._x *= this.parent.width
     }
     if (this.axis % 2 === 0) {
-      this.dom.style.left = (this._x + (this.align % 2 === 0 ? 0 : -this.width)) + 'px';
+      this.dom.style.left =
+        this._x + (this.align % 2 === 0 ? 0 : -this.width) + 'px'
     } else {
-      this.dom.style.right = (this._x + (this.align % 2 === 0 ? -this.width : 0)) + 'px';
+      this.dom.style.right =
+        this._x + (this.align % 2 === 0 ? -this.width : 0) + 'px'
     }
   }
 
-  set y(y:number) {
-    this._y = y;
+  set y(y: number) {
+    this._y = y
     if (!this.absolute) {
-      this._y *= this.parent.height;
+      this._y *= this.parent.height
     }
     if (this.axis < 2) {
-      this.dom.style.top = (this._y + (this.align < 2 ? 0 : -this.height)) + 'px';
+      this.dom.style.top = this._y + (this.align < 2 ? 0 : -this.height) + 'px'
     } else {
-      this.dom.style.bottom = (this._y + (this.align < 2 ? -this.height : 0)) + 'px';
+      this.dom.style.bottom =
+        this._y + (this.align < 2 ? -this.height : 0) + 'px'
     }
   }
 
-  set width(w:number) {
-    this._width = w;
-    this.dom.style.width = this._width + 'px';
+  set width(w: number) {
+    this._width = w
+    this.dom.style.width = this._width + 'px'
   }
 
-  set height(h:number) {
-    this._height = h;
-    this.dom.style.height = this._height + 'px';
+  set height(h: number) {
+    this._height = h
+    this.dom.style.height = this._height + 'px'
   }
 
-  set size(s:number) {
-    this._size = s;
-    this.dom.style.fontSize = this._size + 'px';
+  set size(s: number) {
+    this._size = s
+    this.dom.style.fontSize = this._size + 'px'
   }
 
-  set color(c:number) {
-    this._color = c;
-    var color:string = c.toString(16);
-    color = color.length >= 6 ? color : new Array(6 - color.length + 1).join('0') + color;
-    this.dom.style.color = '#' + color;
+  set color(c: number) {
+    this._color = c
+    var color: string = c.toString(16)
+    color =
+      color.length >= 6
+        ? color
+        : new Array(6 - color.length + 1).join('0') + color
+    this.dom.style.color = '#' + color
     if (this._color === 0) {
-      this._toggleClass('reverse-shadow', true);
+      this._toggleClass('reverse-shadow', true)
     }
   }
 
-  set alpha(a:number) {
-    this._alpha = a;
-    this.dom.style.opacity = Math.min(this._alpha, this.parent.options.global.opacity) + '';
+  set alpha(a: number) {
+    this._alpha = a
+    this.dom.style.opacity =
+      Math.min(this._alpha, this.parent.options.global.opacity) + ''
   }
 
-  set border(b:boolean) {
-    this._border = b;
+  set border(b: boolean) {
+    this._border = b
     if (this._border) {
-      this.dom.style.border = '1px solid #00ffff';
+      this.dom.style.border = '1px solid #00ffff'
     } else {
-      this.dom.style.border = 'none';
+      this.dom.style.border = 'none'
     }
   }
 
-  set shadow(s:boolean) {
-    this._shadow = s;
+  set shadow(s: boolean) {
+    this._shadow = s
     if (!this._shadow) {
-      this._toggleClass('no-shadow', true);
+      this._toggleClass('no-shadow', true)
     }
   }
 
-  set font(f:string) {
-    this._font = f;
+  set font(f: string) {
+    this._font = f
     if (this._font.length > 0) {
-      this.dom.style.fontFamily = this._font;
+      this.dom.style.fontFamily = this._font
     } else {
-      this.dom.style.fontFamily = '';
+      this.dom.style.fontFamily = ''
     }
   }
 
-  set transform(array:Array<number>) {
-    this._transform = new CommentUtils.Matrix3D(array);
+  set transform(array: Array<number>) {
+    this._transform = new CommentUtils.Matrix3D(array)
     if (this.dom !== null) {
-      this.dom.style.transform = this._transform.toCss();
+      this.dom.style.transform = this._transform.toCss()
     }
   }
 
@@ -408,16 +430,16 @@ class CoreComment implements IComment {
    * forward. Otherwise it moves backwards.
    * @param time - elapsed time in ms
    */
-  public time(time:number):void {
-    this.ttl -= time;
+  public time(time: number): void {
+    this.ttl -= time
     if (this.ttl < 0) {
-      this.ttl = 0;
+      this.ttl = 0
     }
     if (this.movable) {
-      this.update();
+      this.update()
     }
     if (this.ttl <= 0) {
-      this.finish();
+      this.finish()
     }
   }
 
@@ -425,18 +447,18 @@ class CoreComment implements IComment {
    * Update the comment's position depending on its mode and
    * the current ttl/dur values.
    */
-  public update():void {
-    this.animate();
+  public update(): void {
+    this.animate()
   }
 
   /**
    * Invalidate the comment position.
    */
-  public invalidate():void {
-    this._x = null;
-    this._y = null;
-    this._width = null;
-    this._height = null;
+  public invalidate(): void {
+    this._x = null
+    this._y = null
+    this._width = null
+    this._height = null
   }
 
   /**
@@ -444,15 +466,16 @@ class CoreComment implements IComment {
    * @param currentMotion - motion object
    * @private
    */
-  private _execMotion(currentMotion:Object, time:number):void {
+  private _execMotion(currentMotion: Object, time: number): void {
     for (var prop in currentMotion) {
       if (currentMotion.hasOwnProperty(prop)) {
-        var m = <IMotion> currentMotion[prop];
+        var m = <IMotion>currentMotion[prop]
         this[prop] = m.easing(
           Math.min(Math.max(time - m.delay, 0), m.dur),
           m.from,
           m.to - m.from,
-          m.dur);
+          m.dur
+        )
       }
     }
   }
@@ -461,26 +484,26 @@ class CoreComment implements IComment {
    * Update the comment's position depending on the applied motion
    * groups.
    */
-  public animate():void {
+  public animate(): void {
     if (this._alphaMotion) {
       this.alpha =
-        (this.dur - this.ttl) *
-          (this._alphaMotion['to'] - this._alphaMotion['from']) /
+        ((this.dur - this.ttl) *
+          (this._alphaMotion['to'] - this._alphaMotion['from'])) /
           this.dur +
-          this._alphaMotion['from'];
+        this._alphaMotion['from']
     }
     if (this.motion.length === 0) {
-      return;
+      return
     }
-    var ttl:number = Math.max(this.ttl, 0);
-    var time:number = (this.dur - ttl) - this._motionStart[this._curMotion];
-    this._execMotion(this.motion[this._curMotion], time);
+    var ttl: number = Math.max(this.ttl, 0)
+    var time: number = this.dur - ttl - this._motionStart[this._curMotion]
+    this._execMotion(this.motion[this._curMotion], time)
     if (this.dur - ttl > this._motionEnd[this._curMotion]) {
-      this._curMotion++;
+      this._curMotion++
       if (this._curMotion >= this.motion.length) {
-        this._curMotion = this.motion.length - 1;
+        this._curMotion = this.motion.length - 1
       }
-      return;
+      return
     }
   }
 
@@ -488,49 +511,65 @@ class CoreComment implements IComment {
    * Notify the comment to stop. This has no effect if the comment
    * is driven by a timer.
    */
-  public stop():void {
+  public stop(): void {
     // Do nothing
   }
 
   /**
    * Remove the comment and do some cleanup.
    */
-  public finish():void {
-    this.parent.finish(this);
+  public finish(): void {
+    this.parent.finish(this)
   }
 
   /**
    * Returns string representation of comment
    * @returns {string}
    */
-  public toString():string {
-    return ['[', this.stime, '|', this.ttl, '/', this.dur, ']', '(', this.mode, ')', this.text].join('');
+  public toString(): string {
+    return [
+      '[',
+      this.stime,
+      '|',
+      this.ttl,
+      '/',
+      this.dur,
+      ']',
+      '(',
+      this.mode,
+      ')',
+      this.text,
+    ].join('')
   }
 }
 
 class ScrollComment extends CoreComment {
-  constructor(parent:ICommentManager, data:Object) {
-    super(parent, data);
-    this.dur *= this.parent.options.scroll.scale;
-    this.ttl *= this.parent.options.scroll.scale;
+  constructor(parent: ICommentManager, data: Object) {
+    super(parent, data)
+    this.dur *= this.parent.options.scroll.scale
+    this.ttl *= this.parent.options.scroll.scale
   }
 
-  set alpha(a:number) {
-    this._alpha = a;
-    this.dom.style.opacity = Math.min(Math.min(this._alpha, this.parent.options.global.opacity),
-      this.parent.options.scroll.opacity) + '';
+  set alpha(a: number) {
+    this._alpha = a
+    this.dom.style.opacity =
+      Math.min(
+        Math.min(this._alpha, this.parent.options.global.opacity),
+        this.parent.options.scroll.opacity
+      ) + ''
   }
 
-  public init(recycle:IComment = null):void {
-    super.init(recycle);
-    this.x = this.parent.width;
+  public init(recycle: IComment = null): void {
+    super.init(recycle)
+    this.x = this.parent.width
     if (this.parent.options.scroll.opacity < 1) {
-      this.alpha = this._alpha;
+      this.alpha = this._alpha
     }
-    this.absolute = true;
+    this.absolute = true
   }
 
-  public update():void {
-    this.x = (this.ttl / this.dur) * (this.parent.width + this.width) - this.width;
+  public update(): void {
+    this.x =
+      (this.ttl / this.dur) * (this.parent.width + this.width) - this.width
   }
 }

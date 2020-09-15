@@ -1,5 +1,5 @@
 {
-  "name": "comment-core-library",
+  "name": "comment-core-library-html-comment",
   "title": "CommentCoreLibrary",
   "description": "Javascript library for organizing and displaying danmaku comments",
   "bugs": {
@@ -22,7 +22,7 @@
     "danmu"
   ],
   "main": "dist/CommentCoreLibrary.js",
-  "version": "0.11.1",
+  "version": "1.0.0",
   "devDependencies": {
     "coveralls": "^3.0.3",
     "grunt": "^1.0.4",
@@ -48,5 +48,9 @@
     "start": "grunt watch",
     "test": "grunt && grunt test",
     "ci": "grunt ci"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
   }
 }

@@ -394,6 +394,7 @@ var CoreComment = (function () {
         this.mode = 1;
         this.stime = 0;
         this.text = '';
+        this.useHTML = false;
         this.ttl = 4000;
         this.dur = 4000;
         this.cindex = -1;
@@ -434,6 +435,9 @@ var CoreComment = (function () {
         this.ttl *= this.parent.options.global.scale;
         if (init.hasOwnProperty('text')) {
             this.text = init['text'];
+        }
+        if (init.hasOwnProperty('useHTML')) {
+            this.useHTML = init['useHTML'];
         }
         if (init.hasOwnProperty('motion')) {
             this._motionStart = [];
@@ -533,12 +537,17 @@ var CoreComment = (function () {
             this.dom = document.createElement('div');
         }
         this.dom.className = this.parent.options.global.className;
-        if (this._className !== "") {
-            this.dom.className += " " + this._className;
+        if (this._className !== '') {
+            this.dom.className += ' ' + this._className;
         }
-        this.dom.appendChild(document.createTextNode(this.text));
-        this.dom.textContent = this.text;
-        this.dom.innerText = this.text;
+        if (this.useHTML) {
+            this.dom.innerHTML = this.text;
+        }
+        else {
+            this.dom.appendChild(document.createTextNode(this.text));
+            this.dom.textContent = this.text;
+            this.dom.innerText = this.text;
+        }
         this.size = this._size;
         if (this._color != 0xffffff) {
             this.color = this._color;
@@ -597,10 +606,12 @@ var CoreComment = (function () {
                 this._x *= this.parent.width;
             }
             if (this.axis % 2 === 0) {
-                this.dom.style.left = (this._x + (this.align % 2 === 0 ? 0 : -this.width)) + 'px';
+                this.dom.style.left =
+                    this._x + (this.align % 2 === 0 ? 0 : -this.width) + 'px';
             }
             else {
-                this.dom.style.right = (this._x + (this.align % 2 === 0 ? -this.width : 0)) + 'px';
+                this.dom.style.right =
+                    this._x + (this.align % 2 === 0 ? -this.width : 0) + 'px';
             }
         },
         enumerable: true,
@@ -637,10 +648,11 @@ var CoreComment = (function () {
                 this._y *= this.parent.height;
             }
             if (this.axis < 2) {
-                this.dom.style.top = (this._y + (this.align < 2 ? 0 : -this.height)) + 'px';
+                this.dom.style.top = this._y + (this.align < 2 ? 0 : -this.height) + 'px';
             }
             else {
-                this.dom.style.bottom = (this._y + (this.align < 2 ? -this.height : 0)) + 'px';
+                this.dom.style.bottom =
+                    this._y + (this.align < 2 ? -this.height : 0) + 'px';
             }
         },
         enumerable: true,
@@ -708,7 +720,10 @@ var CoreComment = (function () {
         set: function (c) {
             this._color = c;
             var color = c.toString(16);
-            color = color.length >= 6 ? color : new Array(6 - color.length + 1).join('0') + color;
+            color =
+                color.length >= 6
+                    ? color
+                    : new Array(6 - color.length + 1).join('0') + color;
             this.dom.style.color = '#' + color;
             if (this._color === 0) {
                 this._toggleClass('reverse-shadow', true);
@@ -723,7 +738,8 @@ var CoreComment = (function () {
         },
         set: function (a) {
             this._alpha = a;
-            this.dom.style.opacity = Math.min(this._alpha, this.parent.options.global.opacity) + '';
+            this.dom.style.opacity =
+                Math.min(this._alpha, this.parent.options.global.opacity) + '';
         },
         enumerable: true,
         configurable: true
@@ -818,8 +834,8 @@ var CoreComment = (function () {
     CoreComment.prototype.animate = function () {
         if (this._alphaMotion) {
             this.alpha =
-                (this.dur - this.ttl) *
-                    (this._alphaMotion['to'] - this._alphaMotion['from']) /
+                ((this.dur - this.ttl) *
+                    (this._alphaMotion['to'] - this._alphaMotion['from'])) /
                     this.dur +
                     this._alphaMotion['from'];
         }
@@ -827,7 +843,7 @@ var CoreComment = (function () {
             return;
         }
         var ttl = Math.max(this.ttl, 0);
-        var time = (this.dur - ttl) - this._motionStart[this._curMotion];
+        var time = this.dur - ttl - this._motionStart[this._curMotion];
         this._execMotion(this.motion[this._curMotion], time);
         if (this.dur - ttl > this._motionEnd[this._curMotion]) {
             this._curMotion++;
@@ -843,10 +859,22 @@ var CoreComment = (function () {
         this.parent.finish(this);
     };
     CoreComment.prototype.toString = function () {
-        return ['[', this.stime, '|', this.ttl, '/', this.dur, ']', '(', this.mode, ')', this.text].join('');
+        return [
+            '[',
+            this.stime,
+            '|',
+            this.ttl,
+            '/',
+            this.dur,
+            ']',
+            '(',
+            this.mode,
+            ')',
+            this.text,
+        ].join('');
     };
     CoreComment.LINEAR = function (t, b, c, d) {
-        return t * c / d + b;
+        return (t * c) / d + b;
     };
     return CoreComment;
 }());
@@ -861,7 +889,8 @@ var ScrollComment = (function (_super) {
     Object.defineProperty(ScrollComment.prototype, "alpha", {
         set: function (a) {
             this._alpha = a;
-            this.dom.style.opacity = Math.min(Math.min(this._alpha, this.parent.options.global.opacity), this.parent.options.scroll.opacity) + '';
+            this.dom.style.opacity =
+                Math.min(Math.min(this._alpha, this.parent.options.global.opacity), this.parent.options.scroll.opacity) + '';
         },
         enumerable: true,
         configurable: true
@@ -876,7 +905,8 @@ var ScrollComment = (function (_super) {
         this.absolute = true;
     };
     ScrollComment.prototype.update = function () {
-        this.x = (this.ttl / this.dur) * (this.parent.width + this.width) - this.width;
+        this.x =
+            (this.ttl / this.dur) * (this.parent.width + this.width) - this.width;
     };
     return ScrollComment;
 }(CoreComment));
